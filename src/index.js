@@ -2,73 +2,76 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-// ett sök fält för att söka på symbol
-
-// ett sökfält för att lägga in nyckeln i
-
-// en tabell till att börja med som visar datan man får
-
-// ska man passa hit all getdata?
-    // eller ska man rendera detta upp i huvudfunktionen???... nej man borde rendera allt här... så man delar upp allt
-class EquityTable extends React.Component {
-
-    // när gör row så lägg key som unix timestamp ellern åt? eller bara gör en hash?
-    constructor(props){
-        super(props);
-        this.state = {
-            tHead: [],
-            tBody: [],
-            tableHeader: "",
-            wholeTable: null
+// det är hit all metadata ska komma
+class MetaData extends React.Component {
+    initDivs(){
+        let divs = [];
+        for (const key in this.props) {
+            if (this.props.hasOwnProperty(key)) {
+                const element = this.props[key];
+                divs.push(<div><h3>{key}</h3> {element}</div>);
+            }
         }
+        return divs;
     }
-
-    getTBody(){
-        /* 2018-05-24:
-            1. open: "1086.9000"
-            2. high: "1087.1200"
-            3. low: "1072.3000"
-            4. close: "1085.4500"
-            5. adjusted close: "1085.4500"
-            6. volume: "1030194"
-            7. dividend amount: "0.0000"
-            8. split coefficient: "1.0000" */
-
-        console.log(this.props.tableBody);
+    render() {
+        return (
+            <div>
+                {this.initDivs()}
+            </div>
+        );
     }
+}
 
-    getTHead(){
-        /*  
-
-       det man vill ha är symbol och last refreshed, och timezone kanske?
-        
-            1. Information: "Daily Time Series with Splits and Dividend Events", 
-            2. Symbol: "GOOGL", 3. Last Refreshed: "2018-10-15 09:37:23", 
-            4. Output Size: "Compact", 
-            5. Time Zone: "US/Eastern"} 
-
-        */
-        console.log(this.props.tableHead);
-
-        // sen ta this.props.tableBody[0]
+class ThElement extends React.Component {
+    mapPropsToTHs(){
+        let thArray = [<th></th>];
+        for (const key in this.props) {
+            if (this.props.hasOwnProperty(key)) {
+                const element = this.props[key];
+                thArray.push(<th>{element}</th>);
+            }
+        }
+        return thArray;
     }
-
-    // skapar hela tabellen, sen när den inte är null längre så printa den
-    initiateTable(){
-        if(Object.keys(this.props.tableBody).length > 0 && Object.keys(this.props.tableHead).length){
-            this.getTHead();
-            this.getTBody();
-
-       }
+    render() {
+        return (
+            <tr>{this.mapPropsToTHs()}</tr>
+        );
     }
+}
 
+class TrElement extends React.Component {
+    mapPropsToTDs(){
+        let tdArray = [];
+        for (const key in this.props) {
+            if (this.props.hasOwnProperty(key)) {
+                const element = this.props[key];
+                tdArray.push(<td>{element}</td>);
+            }
+        }
+        return tdArray;
+    }
+    render() {
+        return (
+            <tr>{this.mapPropsToTDs()}</tr>
+        );
+    }
+}
+
+class EquityTable extends React.Component {
     render () {
-        this.initiateTable();
         return(
-            <table className={this.props.className}>
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+            <div>
+                <table className={this.props.className}>
+                    <thead>
+                        {this.props.tableHead}
+                    </thead>
+                    <tbody>
+                        {this.props.tableBody}
+                    </tbody>
+                </table>
+            </div>
         );
     }
 }
@@ -109,10 +112,22 @@ class MainFrame extends React.Component {
         super(props);
         this.state = {
             searchValue: "",
-            apiKey: "",
+            apiKey: "LE7Z3SCLCV6X6QHZ",
             metaData: "",
-            bodyData: ""
+            bodyData: "",
+            headData: "",
+            tBody: [],
+            tHead: [],
+            elementKeys:[]
         }
+    }
+
+    elemKeyGen(keyArray=[]){
+        let genKey = Math.random().toString(36).substring(2);
+        while(keyArray.includes(genKey)){
+            genKey = Math.random().toString(36).substring(2);
+        }
+        keyArray.push(genKey);
     }
 
     updateInputValue(event){
@@ -146,10 +161,13 @@ class MainFrame extends React.Component {
                     let data = JSON.parse(response);
                     let metaData = data["Meta Data"];
                     let bodyData = data["Time Series (Daily)"];
+                    let headData = Object.keys(bodyData[Object.keys(bodyData)[0]]).map(th => th.split(".")[1].slice(1)); 
                     this.setState({
                         metaData: metaData,
-                        bodyData: bodyData
+                        bodyData: bodyData,
+                        headData: headData
                     });
+                    this.initTable();
                 });    
             } else {
                 alert("You have to enter a key!");
@@ -159,13 +177,40 @@ class MainFrame extends React.Component {
         }
     }
 
+    initTable(){
+        this.setState({
+            tBody: this.getTBody(),
+            tHead: this.getTHead()
+        });
+    }
+
+    getTBody(){
+        let bodyArray = [];
+        let genKeys = [];
+        for (const key in this.state.bodyData) {
+            if (this.state.bodyData.hasOwnProperty(key)) {
+                const element = this.state.bodyData[key];
+                let genKey = this.elemKeyGen(genKeys);
+                bodyArray.push(
+                    <TrElement time={key} key={genKey} {...element} />
+                );
+            }
+        }
+        return bodyArray;
+    }
+    getTHead(){
+        let genKey = this.elemKeyGen([]);
+        return <ThElement key={genKey} {...this.state.headData} />;
+    }
+
     render() {
         return(
             <div>
                 <SearchField className={"symbol-search-field"} searchHandler={this.updateInputValue.bind(this)}/>
                 <SubmitBtn className={"symbol-search-submit"} submitHandler={this.submitHandler.bind(this)}/>
                 <KeyField className={"key-field"} keyHandler={this.keyHandler.bind(this)}/>
-                <EquityTable tableHead={this.state.metaData} tableBody={this.state.bodyData} />
+                <MetaData {...this.state.metaData}/>
+                <EquityTable tableHead={this.state.tHead} tableBody={this.state.tBody} />
             </div>
         );
     }
