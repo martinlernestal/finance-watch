@@ -12,6 +12,7 @@ import SearchField from "./SearchField.js";
 import KeyField from "./KeyField.js";
 import SubmitBtn from "./SubmitBtn.js";
 import SearchArea from "./SearchArea.js";
+import Scene from "./3dview.js";
 
 class MainFrame extends React.Component {
 
@@ -126,6 +127,7 @@ class MainFrame extends React.Component {
                     <SubmitBtn submitHandler={this.submitHandler.bind(this)}/>
                     <br/>
                 </SearchArea>
+                <Scene />
                 <EquityTable tableHead={this.state.tHead} tableBody={this.state.tBody} />
             </div>
         );
