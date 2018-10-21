@@ -14,7 +14,7 @@ class MetaData extends React.Component  {
     }
     render() {
         return (
-            <div className={"search-metadata"}>
+            <div className="search-metadata">
                 {this.initDivs()}
             </div>
         );

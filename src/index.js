@@ -58,8 +58,7 @@ class MainFrame extends React.Component {
     sortHeadData(bodyData){
         return Object.keys(bodyData[Object.keys(bodyData)[0]])
                 .map(th => 
-                        th.split(".")[1].slice(1)
-                    );
+                        th.split(".")[1].slice(1));
     }
 
     submitHandler(){
@@ -117,17 +116,17 @@ class MainFrame extends React.Component {
     render() {
         return(
             <div>
-                <SearchArea className={"search-area"}>
+                <SearchArea>
                     <MetaData {...this.state.metaData}/>
                     <br/>
-                    <SearchField className={"symbol-search-field"} searchHandler={this.updateInputValue.bind(this)}/>
+                    <SearchField searchHandler={this.updateInputValue.bind(this)}/>
                     <br/>
-                    <KeyField className={"key-field"} keyHandler={this.keyHandler.bind(this)} keyValue={this.state.apiKey}/>
+                    <KeyField keyHandler={this.keyHandler.bind(this)} keyValue={this.state.apiKey}/>
                     <br/>
-                    <SubmitBtn className={"symbol-search-submit"} submitHandler={this.submitHandler.bind(this)}/>
+                    <SubmitBtn submitHandler={this.submitHandler.bind(this)}/>
                     <br/>
                 </SearchArea>
-                <EquityTable className={"table table-dark"} tableHead={this.state.tHead} tableBody={this.state.tBody} />
+                <EquityTable tableHead={this.state.tHead} tableBody={this.state.tBody} />
             </div>
         );
     }

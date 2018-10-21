@@ -13,7 +13,7 @@ class ThElement extends React.Component {
     }
     render() {
         return (
-            <tr scope={"col"}>{this.mapPropsToTHs()}</tr>
+            <tr scope="col">{this.mapPropsToTHs()}</tr>
         );
     }
 }

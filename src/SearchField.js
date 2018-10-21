@@ -4,7 +4,7 @@ class SearchField extends React.Component {
     render(){
         return(
             <input type="text" 
-                className={this.props.className} 
+                className="form-text"
                 onChange={this.props.searchHandler}>
             </input>
         );
