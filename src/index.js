@@ -1,110 +1,17 @@
+import './index.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
 
-// det är hit all metadata ska komma
-class MetaData extends React.Component {
-    initDivs(){
-        let divs = [];
-        for (const key in this.props) {
-            if (this.props.hasOwnProperty(key)) {
-                const element = this.props[key];
-                divs.push(<div><h3>{key}</h3> {element}</div>);
-            }
-        }
-        return divs;
-    }
-    render() {
-        return (
-            <div>
-                {this.initDivs()}
-            </div>
-        );
-    }
-}
+import functions from "./functions.js";
 
-class ThElement extends React.Component {
-    mapPropsToTHs(){
-        let thArray = [<th></th>];
-        for (const key in this.props) {
-            if (this.props.hasOwnProperty(key)) {
-                const element = this.props[key];
-                thArray.push(<th>{element}</th>);
-            }
-        }
-        return thArray;
-    }
-    render() {
-        return (
-            <tr>{this.mapPropsToTHs()}</tr>
-        );
-    }
-}
-
-class TrElement extends React.Component {
-    mapPropsToTDs(){
-        let tdArray = [];
-        for (const key in this.props) {
-            if (this.props.hasOwnProperty(key)) {
-                const element = this.props[key];
-                tdArray.push(<td>{element}</td>);
-            }
-        }
-        return tdArray;
-    }
-    render() {
-        return (
-            <tr>{this.mapPropsToTDs()}</tr>
-        );
-    }
-}
-
-class EquityTable extends React.Component {
-    render () {
-        return(
-            <div>
-                <table className={this.props.className}>
-                    <thead>
-                        {this.props.tableHead}
-                    </thead>
-                    <tbody>
-                        {this.props.tableBody}
-                    </tbody>
-                </table>
-            </div>
-        );
-    }
-}
-
-class SearchField extends React.Component {
-    render(){
-        return(
-            <input type="text" 
-                className={this.props.className} 
-                onChange={this.props.searchHandler}>
-            </input>
-        );
-    }
-}
-
-class KeyField extends React.Component {
-    render(){
-        return(
-            <input type="text" 
-                className={this.props.className} 
-                onChange={this.props.keyHandler}>
-            </input>
-        );
-    }
-}
-
-class SubmitBtn extends React.Component {
-    render(){
-        return (
-            <button className={this.props.className} onClick={this.props.submitHandler}>Get Data</button>
-        );
-    }
-}
+import MetaData from "./MetaData.js";
+import ThElement from "./ThElement.js";
+import TrElement from "./TrElement.js";
+import EquityTable from "./EquityTable.js";
+import SearchField from "./SearchField.js";
+import KeyField from "./KeyField.js";
+import SubmitBtn from "./SubmitBtn.js";
+import SearchArea from "./SearchArea.js";
 
 class MainFrame extends React.Component {
 
@@ -117,17 +24,8 @@ class MainFrame extends React.Component {
             bodyData: "",
             headData: "",
             tBody: [],
-            tHead: [],
-            elementKeys:[]
+            tHead: []
         }
-    }
-
-    elemKeyGen(keyArray=[]){
-        let genKey = Math.random().toString(36).substring(2);
-        while(keyArray.includes(genKey)){
-            genKey = Math.random().toString(36).substring(2);
-        }
-        keyArray.push(genKey);
     }
 
     updateInputValue(event){
@@ -150,18 +48,32 @@ class MainFrame extends React.Component {
         }
     }
 
+    sortMetaData(metaData){
+        let metaDataObjValues = Object.values(metaData);
+        metaData = [metaDataObjValues[1], 
+                    metaDataObjValues[2]];
+        return metaData;
+    }
+
+    sortHeadData(bodyData){
+        return Object.keys(bodyData[Object.keys(bodyData)[0]])
+                .map(th => 
+                        th.split(".")[1].slice(1)
+                    );
+    }
+
     submitHandler(){
         if(typeof this.state.searchValue !== "undefined" && this.state.searchValue !== ""){    
             if(typeof this.state.apiKey !== "undefined" && this.state.apiKey !== ""){ 
-                AvantPointGet({
+                functions.AvantPointGet({
                     function: "TIME_SERIES_DAILY_ADJUSTED",
                     symbol: this.state.searchValue,
                     apikey: this.state.apiKey
                 }, (response)=> {
                     let data = JSON.parse(response);
-                    let metaData = data["Meta Data"];
+                    let metaData = this.sortMetaData(data["Meta Data"]);
+                    let headData = this.sortHeadData(data["Time Series (Daily)"]);
                     let bodyData = data["Time Series (Daily)"];
-                    let headData = Object.keys(bodyData[Object.keys(bodyData)[0]]).map(th => th.split(".")[1].slice(1)); 
                     this.setState({
                         metaData: metaData,
                         bodyData: bodyData,
@@ -190,7 +102,7 @@ class MainFrame extends React.Component {
         for (const key in this.state.bodyData) {
             if (this.state.bodyData.hasOwnProperty(key)) {
                 const element = this.state.bodyData[key];
-                let genKey = this.elemKeyGen(genKeys);
+                let genKey = functions.elemKeyGen(genKeys);
                 bodyArray.push(
                     <TrElement time={key} key={genKey} {...element} />
                 );
@@ -199,47 +111,27 @@ class MainFrame extends React.Component {
         return bodyArray;
     }
     getTHead(){
-        let genKey = this.elemKeyGen([]);
+        let genKey = functions.elemKeyGen([]);
         return <ThElement key={genKey} {...this.state.headData} />;
     }
-
     render() {
         return(
             <div>
-                <SearchField className={"symbol-search-field"} searchHandler={this.updateInputValue.bind(this)}/>
-                <SubmitBtn className={"symbol-search-submit"} submitHandler={this.submitHandler.bind(this)}/>
-                <KeyField className={"key-field"} keyHandler={this.keyHandler.bind(this)}/>
-                <MetaData {...this.state.metaData}/>
-                <EquityTable tableHead={this.state.tHead} tableBody={this.state.tBody} />
+                <SearchArea className={"search-area"}>
+                    <MetaData {...this.state.metaData}/>
+                    <br/>
+                    <SearchField className={"symbol-search-field"} searchHandler={this.updateInputValue.bind(this)}/>
+                    <br/>
+                    <KeyField className={"key-field"} keyHandler={this.keyHandler.bind(this)} keyValue={this.state.apiKey}/>
+                    <br/>
+                    <SubmitBtn className={"symbol-search-submit"} submitHandler={this.submitHandler.bind(this)}/>
+                    <br/>
+                </SearchArea>
+                <EquityTable className={"table table-dark"} tableHead={this.state.tHead} tableBody={this.state.tBody} />
             </div>
         );
     }
 }
-
-// https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=GOOGL&apikey=LE7Z3SCLCV6X6QHZ
-
-function AvantPointGet(options = [], callback = () => {}){
-    let getUrl = "https://www.alphavantage.co/query?";
-    if(typeof options !== "undefined"){
-        for (const key in options) {
-            if (options.hasOwnProperty(key)) {
-                const option = options[key];
-                getUrl += key+"="+option;
-                if(key != "apikey"){
-                    getUrl += "&";
-                }
-            }
-        }
-    }
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() { 
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
-            callback(xmlHttp.responseText);
-    }
-    xmlHttp.open("GET", getUrl, true);
-    xmlHttp.send(null);
-}
-
 
 ReactDOM.render(
     <MainFrame />,

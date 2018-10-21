@@ -1,0 +1,14 @@
+.search-area{
+    padding: 40px;
+}
+.search-area * {
+    margin: 20px;
+}
+
+.search-metadata {
+    margin: 0px !important;
+}
+
+body {
+    background-color: #212529;
+}
